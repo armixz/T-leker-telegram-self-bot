@@ -1,19 +1,28 @@
-from telethon import TelegramClient,events,utils
-from telethon import functions, types
+
+from telethon import TelegramClient,events
 from telethon.tl.functions.users import GetFullUserRequest
+from telethon.tl.functions.photos import UploadProfilePhotoRequest
 from help_center import help_text
-from os import getcwd
+from os import  getcwd, remove
+from subprocess import getoutput
+from requests import get
+from colorama import init,Fore
+init()
+
 #  Remember to use your own values from my.telegram.org!
-api_id = "2421227"
-api_hash = "5cfbdb99e4477b828bf06a9cd1efeead"
+api_id = "xxxxx"
+api_hash = "xxxxxxxxxxxxxxxxx"
 
 client = TelegramClient('session_name', api_id, api_hash)
+
+
+print(Fore.RED+"[*]"+Fore.GREEN+"T-leker Started..."+Fore.RESET+'\n\t You can get ping')
 
 
 ## get help
 @client.on(events.NewMessage(outgoing=True,pattern=r'(?i).*/help'))
 async def help(event):
- 
+
     result = help_text.all_help
     await event.edit(str(result))
 
@@ -21,8 +30,9 @@ async def help(event):
 ## ping To check if the robot is online
 @client.on(events.NewMessage(outgoing=True,pattern=r'(?i).*/ping'))
 async def ping(event):
+    sender = await event.get_sender()
     chat = event.message.chat_id
-    print(chat)
+    print(Fore.RED+"[*]"+Fore.YELLOW+f"{sender.username}"+Fore.RESET+" get ping on this chat : "+Fore.GREEN+f"{chat}"+Fore.RESET)
     result = f"T-leker is online ✅ \n 🤖 chat id : {chat} "
     await event.edit(result)
 
@@ -30,20 +40,28 @@ async def ping(event):
 ## Get a chat history
 @client.on(events.NewMessage(outgoing=True,pattern=r'(?i).*/his'))
 async def his(event):
-    command = str(event.raw_text).split(" ")
-    chat = event.message.chat_id
-    result = f'📡 History {command[1]} previous messages for this conversation \n\n'
-    async for message in client.iter_messages(chat,limit = int(command[1])) :
-        result += str(f"{message.sender_id} : {message.text} \n")
-    
-    print(dir(message))
-    await event.edit(result)
+    try:
+        command = str(event.raw_text).split(" ")
+        chat = event.message.chat_id
+        result = f'📡 History {command[1]} previous messages for this conversation \n\n'
+        async for message in client.iter_messages(chat,limit = int(command[1])) :
+            result += str(f"{message.sender_id} : {message.text} \n")
+        await event.edit(result)
 
+        sender = await event.get_sender()
+        chat = event.message.chat_id
+        print(Fore.RED+"[*]"+Fore.YELLOW+f"{sender.username}"+Fore.RESET+f" get {command[1]} message history on this chat : "+Fore.GREEN+f"{chat}"+Fore.RESET)
+    except IndexError:
+        await event.edit("❌ Set number!")
+        sender = await event.get_sender()
+        chat = event.message.chat_id
+        print(Fore.RED+"[*]"+Fore.YELLOW+f"{sender.username}"+Fore.RESET+f" get message history on this chat : "+Fore.GREEN+f"{chat}"+Fore.RED+" but not set number"+Fore.RESET)
 ## get full info From a users
 @client.on(events.NewMessage(outgoing=True,pattern=r'(?i).*/info'))
 async def info(event):
     chat = event.message.chat_id
-
+    sender = await event.get_sender()
+    print(Fore.RED+"[*]"+Fore.YELLOW+f"{sender.username}"+Fore.RESET+"Get information this chat : "+Fore.GREEN+f"{chat}"+Fore.RESET)
     ## a if , for get info with reply
     if event.is_reply:
         replied = await event.get_reply_message()
@@ -68,7 +86,9 @@ async def info(event):
     except TypeError:
         ## if user send /info command in group
         result = "❌this is a group❌\njust for users"
-        
+        chat = event.message.chat_id
+        sender = await event.get_sender()
+        print(Fore.RED+"[*]"+Fore.YELLOW+f"{sender.username}"+Fore.RESET+"Get information this chat : "+Fore.GREEN+f"{chat}"+Fore.RED+" But this chat a group"+Fore.RESET)
     await event.edit(str(result))
 
 
@@ -83,16 +103,23 @@ async def spm(event):
     print(number)
     for i in range(0,int(number)):
         await event.respond(str(text))
-    
+        chat = event.message.chat_id
+        sender = await event.get_sender()
+        print(Fore.RED+"[*]"+Fore.YELLOW+f"{sender.username}"+Fore.RESET+f"Start Spam attack in range 0,{number} on this chat : "+Fore.GREEN+f"{chat}"+Fore.RESET)
 
 ## Delete a large number of messages
 @client.on(events.NewMessage(outgoing=True,pattern=r'(?i).*/delete'))
 async def delete(event):
-    command = str(event.raw_text).split(" ")
-    chat = event.message.chat_id
-    async for message in client.iter_messages(chat,limit = int(command[1])+1) :
-        await client.delete_messages(chat, message)
-
+    try:
+        command = str(event.raw_text).split(" ")
+        chat = event.message.chat_id
+        sender = await event.get_sender()
+        print(Fore.RED+"[*]"+Fore.YELLOW+f"{sender.username}"+Fore.RESET+f"Delete {command[1]} on this chat : "+Fore.GREEN+f"{chat}"+Fore.RESET)
+        async for message in client.iter_messages(chat,limit = int(command[1])+1) :
+            await client.delete_messages(chat, message)
+    except IndexError:
+        await event.edit("❌ Set number!")
+        print(Fore.RED+"[*]"+Fore.YELLOW+f"{sender.username}"+Fore.RESET+f"try to Delete {command[1]} on this chat : "+Fore.GREEN+f"{chat}"+Fore.RED+" but Forget Set Number For Delete")
 ## profile saver
 @client.on(events.NewMessage(outgoing=True,pattern=r'(?i).*/save_profile'))
 async def save_profile(event):
@@ -101,14 +128,45 @@ async def save_profile(event):
         if event.is_reply:
             replied = await event.get_reply_message()
             sender = replied.sender
+            log_sender = await event.get_sender()
+            print(Fore.RED+"[*]"+Fore.YELLOW+f"{log_sender.username}"+Fore.RESET+f"save profile this user : "+Fore.GREEN+f"{sender.username} : {sender.id}"+Fore.RESET)
             path = getcwd()
             await client.download_profile_photo(sender,path)
             await event.edit('Profile saved ✅'.format(sender.username))
     except Exception as ex:
         await event.edit("Download failed ❌ \n Error {}".format(ex))
-
+        print(Fore.RED+"[*]"+Fore.YELLOW+f"{log_sender.username}"+Fore.RESET+f"save profile this user : "+Fore.GREEN+f"{sender.username} : {sender.id}"+Fore.RED+f"But Download failed \n ERROR : {ex}"+Fore.RESET)
     if not event.is_reply:
-         await event.edit("💢Please reply to the user you want to save profile.💢")
-        
+        await event.edit("💢Please reply to the user you want to save profile.💢")
+        print(Fore.RED+"[*]"+Fore.YELLOW+f"{log_sender.username}"+Fore.RESET+f"save profile this user : "+Fore.GREEN+f"{sender.username} : {sender.id}"+Fore.RED+f"But Not reply to the user want to save profile."+Fore.RESET)
+
+@client.on(events.NewMessage(outgoing=True,pattern=r'(?i).*/cmd'))
+async def cmd(event):
+    command = str(event.raw_text)
+    command = command.replace("/cmd ",'')
+    output = getoutput(command)
+    await event.edit(f"{output}")
+    log_sender = await event.get_sender()
+    print(Fore.RED+"[*]"+Fore.YELLOW+f"{log_sender.username}"+Fore.RESET+f"run this command on system : {command} "+Fore.RESET)
+
+
+@client.on(events.NewMessage(outgoing=True,pattern=r'(?i).*/get_site'))
+async def cmd(event):
+    command = str(event.raw_text)
+    command = command.replace("/get_site ",'') 
+    response = get(f"{command}")
+
+    fo = open("index.html", "wb")
+
+    fo.write(response.content)
+
+    fo.close()
+    chat = event.message.chat_id
+    await client.send_file(chat,'./index.html')
+    remove('./index.html')
+    log_sender = await event.get_sender()
+    print(Fore.RED+"[*]"+Fore.YELLOW+f"{log_sender.username}"+Fore.RESET+f"Get this site : {command} "+Fore.RESET)
+
+
 client.start()
 client.run_until_disconnected()

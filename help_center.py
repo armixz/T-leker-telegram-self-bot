@@ -14,8 +14,8 @@ class help_text():
     spm = '''A spammer to send a large number of messages. 🔰 usage /spm [text] [number] 🔰
     example : /spm hi 10'''
     delete = '''
-    Delete a large number of messages 🔰 usage => /del [number] 🔰
-    example : /del 12
+    Delete a large number of messages 🔰 usage => /delete [number] 🔰
+    example : /delete 12
     '''
     save_profile = '''
     reply to the user you want to save profile. 🔰 usage => /save_profile 🔰
