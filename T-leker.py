@@ -10,8 +10,8 @@ from datetime import datetime, time
 init()
 
 #  Remember to use your own values from my.telegram.org!
-api_id = "2421227"
-api_hash = "5cfbdb99e4477b828bf06a9cd1efeead"
+api_id = "xxxxxxx"
+api_hash = "xxxxxxxxxxxx"
 
 client = TelegramClient('session_name', api_id, api_hash)
 
